@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  courier_backend:
+    image: courier_backend:latest
+    container_name: courier_backend
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./backend/courier.db:/app/courier.db # Persist database
+
+  courier_frontend:
+    image: courier_frontend:latest
+    container_name: courier_frontend
+    restart: unless-stopped
+    ports:
+      - "3005:80"
+    depends_on:
+      - courier_backend

@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+qrcode
+pillow
+pydantic
+geopy
+passlib
+bcrypt==3.2.2
+httpx

@@ -1,0 +1,16 @@
+Stworzyć aplikacje, która umożliwia CRUD (Create, Read, Update, Delete) rzeczy z bazy danych.
+Ma być BackEnd (Java, C#, Python), który korzysta z REST API.
+Oraz ma być FrontEnd (React, Angular).
+
+Może to być system, gdzie klient i kurier mają konta. Klient może wysłać paczkę do odbiorcy.
+Koszt dostawy określany jest za pomocą stawki liczonej od kilometra (do wykorzystania google maps API).
+Opłata odbywa się za pomocą PayPala (zrobić tylko szkic jak to by wyglądało w rzeczywistości).
+Potem generowany jest kod dla klienta oraz może on wygenerować także kod QR.
+Kurierowi w systemie wyświetla się paczka do odebrania i wysłania do nadawcy.
+Kurier może wydrukować etykietę zwrotną.
+
+
+Użytkownicy testowi:
+test1 : 1111
+test2 : 2222
+kurier1 : 3333

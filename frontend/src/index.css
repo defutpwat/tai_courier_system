@@ -1,0 +1,214 @@
+:root {
+  --primary-color: #4F46E5; /* Indigo 600 */
+  --primary-hover: #4338CA;
+  --bg-color: #F3F4F6; /* Gray 100 */
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --text-main: #1F2937;
+  --text-muted: #6B7280;
+  --success: #10B981;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-main);
+  background-color: var(--bg-color);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%);
+  color: var(--text-main);
+}
+
+#root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.glass-container {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.glass-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+h1, h2, h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+}
+
+.btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+body.admin-theme, body.dark-theme.admin-theme {
+  --bg-color: #120303;
+  --container-bg: rgba(40, 10, 10, 0.6);
+  --primary-color: #ff4d4d;
+  --secondary-color: #990000;
+  color: #fff0f0;
+}
+
+.btn:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-success {
+  background-color: var(--success);
+}
+.btn-success:hover {
+  background-color: #059669;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--text-main);
+}
+.btn-outline:hover {
+  background-color: var(--text-main);
+  color: var(--bg-color);
+}
+
+input, select {
+  width: 100%;
+  padding: 0.75rem;
+  margin: 0.5rem 0 1rem 0;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.9);
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.nav-link {
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--card-bg);
+  backdrop-filter: blur(5px);
+  border: 1px solid var(--glass-border);
+  font-weight: 600;
+  color: var(--primary-color);
+  transition: transform 0.2s, color 0.2s;
+}
+.nav-link.active {
+  background: var(--primary-color);
+  color: white;
+}
+.nav-link:hover:not(.active) {
+  background: rgba(255,255,255,0.9);
+}
+
+/* Modal for QR Code */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+}
+
+/* Dark Mode Variables & Rules */
+body.dark-theme {
+  --bg-color: #111827;
+  --card-bg: rgba(31, 41, 55, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --text-main: #F9FAFB;
+  --text-muted: #9CA3AF;
+  --primary-color: #818CF8;
+  --primary-hover: #6366F1;
+  --success: #34D399;
+  background: linear-gradient(135deg, #121212 0%, #000000 100%);
+}
+
+.dark-theme input, .dark-theme select {
+  background: rgba(31, 41, 55, 0.9);
+  color: var(--text-main);
+  border-color: #374151;
+}
+
+.dark-theme input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+.dark-theme .modal {
+  background: #1f2937;
+  color: var(--text-main);
+}
+
+/* --- Utility Classes (Hermetyzacja układu) --- */
+.w-full { width: 100%; }
+.max-w-md { max-width: 400px; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-8 { margin-top: 2rem; }
+.mt-12 { margin-top: 3rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-8 { margin-bottom: 2rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.text-center { text-align: center; }
+.text-main { color: var(--text-main); }
+.text-muted { color: var(--text-muted); }
+.text-primary { color: var(--primary-color); }

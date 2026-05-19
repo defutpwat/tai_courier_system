@@ -1,0 +1,26 @@
+# Backend (Python / FastAPI)
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+courier.db
+
+# Skrypty testowe
+test_endpoint.py
+test_paypal.py
+
+# Frontend (Node / React / Vite)
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System operacyjny i środowiska
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
