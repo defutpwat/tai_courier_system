@@ -23,10 +23,10 @@ Ze względów bezpieczeństwa w publicznym repozytorium nie znajdują się tajne
 
 Gdy już go masz:
 
-1. Otwórz folder `backend/` i utwórz w nim plik o nazwie dokładnie `.env`.
+1. Otwórz folder `backend/services` i utwórz w nim plik o nazwie dokładnie `config.py`.
 2. Wklej do niego otrzymany klucz w poniższym formacie:
    ```env
-   PAYPAL_CLIENT_SECRET=tutaj_wklej_otrzymany_secret
+   PAYPAL_CLIENT_SECRET = os.environ.get("PAYPAL_CLIENT_SECRET", "tutaj_wklej_otrzymany_secret")
    ```
 
 *(Zmienna Client ID we frontendzie jest publiczna i została już dodana na stałe do repozytorium w pliku ClientDashboard.jsx na potrzeby integracji środowiska testowego Sandbox).*
