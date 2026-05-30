@@ -6,11 +6,11 @@ import {
 import { api } from '../api';
 import { GlassCard } from './ui/GlassCard';
 import { Input } from './ui/Input';
+import { useQuery } from '@tanstack/react-query';
 
 const COLORS = ['#e63946', '#f4a261', '#2a9d8f', '#e9c46a'];
 
 function AdminDashboard({ user }) {
-  const [stats, setStats] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -18,22 +18,25 @@ function AdminDashboard({ user }) {
 
   useEffect(() => {
     document.body.classList.add('admin-theme');
-    fetchStats();
     return () => {
       document.body.classList.remove('admin-theme');
     };
   }, [selectedMonth]);
 
-  const fetchStats = async () => {
-    try {
-      const data = await api.getAdminStats(selectedMonth);
-      setStats(data);
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const { data: stats, isLoading, isError } = useQuery({
+    queryKey: ['adminStats', selectedMonth],
+    queryFn: () => api.getAdminStats(selectedMonth)
+  });
 
-  if (!stats) return <div className="text-center mt-12"><h2>Ładowanie Oka Saurona...</h2></div>;
+  if (isLoading) return (
+    <div className="text-center mt-12 flex-center flex-col">
+      <div className="spinner mb-4" style={{borderTopColor: '#ff4d4d'}}></div>
+      <h2>Ładowanie Oka Saurona...</h2>
+    </div>
+  );
+
+  if (isError) return <div className="text-center mt-12 text-red"><h2>Błąd podczas ładowania statystyk.</h2></div>;
+  if (!stats) return null;
 
   return (
     <div className="mb-8">
