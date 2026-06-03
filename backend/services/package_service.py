@@ -4,16 +4,18 @@ import schemas
 
 async def calculate_package_cost_and_distance(package_data: schemas.PackageCreate) -> dict:
     """
-    Asynchronicznie oblicza dystans z użyciem zewnętrznego API oraz wycenia paczkę.
+    Asynchronicznie oblicza dystans drogowo z użyciem Google Maps API i wycenia paczkę.
     """
     try:
-        origin_loc = await geocoding_service.get_coordinates(package_data.origin_address)
-        dest_loc = await geocoding_service.get_coordinates(package_data.destination_address)
+        distance_km = await geocoding_service.get_driving_distance(
+            package_data.origin_address, 
+            package_data.destination_address
+        )
         
-        if not origin_loc or not dest_loc:
+        if distance_km is None:
+            # Fallback w przypadku błędu API lub braku odnalezienia drogi
             distance_km = random.uniform(5.0, 50.0)
-        else:
-            distance_km = geocoding_service.calculate_distance(origin_loc, dest_loc)
+            
     except Exception:
         distance_km = random.uniform(5.0, 50.0)
 

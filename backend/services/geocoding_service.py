@@ -1,48 +1,31 @@
 import httpx
-import math
-from typing import Tuple, Optional
+from typing import Optional
+import config
 
-async def get_coordinates(address: str) -> Optional[Tuple[float, float]]:
+async def get_driving_distance(origin: str, destination: str) -> Optional[float]:
     """
-    Pobiera współrzędne z serwisu Nominatim (OSM) za pomocą asynchronicznego zapytania HTTP.
-    Odporne na zablokowanie całego API przez użycie httpx.AsyncClient i timeout.
+    Pobiera rzeczywisty dystans drogowy z Google Maps Distance Matrix API.
+    Zwraca dystans w kilometrach.
     """
-    url = "https://nominatim.openstreetmap.org/search"
+    url = "https://maps.googleapis.com/maps/api/distancematrix/json"
     params = {
-        "q": address,
-        "format": "json",
-        "limit": 1
-    }
-    headers = {
-        "User-Agent": "courier_system_gemini"
+        "origins": origin,
+        "destinations": destination,
+        "key": config.GOOGLE_MAPS_API_KEY
     }
     
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(url, params=params, headers=headers)
+            response = await client.get(url, params=params)
             response.raise_for_status()
             data = response.json()
-            if data and len(data) > 0:
-                return float(data[0]["lat"]), float(data[0]["lon"])
+            
+            if data.get("status") == "OK" and data["rows"]:
+                elements = data["rows"][0].get("elements", [])
+                if elements and elements[0].get("status") == "OK":
+                    distance_meters = elements[0]["distance"]["value"]
+                    return distance_meters / 1000.0
             return None
-    except Exception:
+    except Exception as e:
+        print(f"Błąd Google Maps API: {e}")
         return None
-
-def calculate_distance(coords1: Tuple[float, float], coords2: Tuple[float, float]) -> float:
-    """
-    Oblicza dystans w kilometrach pomiędzy dwoma punktami (Haversine formula).
-    Odciąża serwer od dużych pakietów typu geopy.distance, robiąc to czystą matematyką.
-    """
-    lat1, lon1 = coords1
-    lat2, lon2 = coords2
-    
-    R = 6371.0 # Promień Ziemi w kilometrach
-    
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    
-    a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    
-    distance = R * c
-    return max(distance, 1.0)
