@@ -80,7 +80,7 @@ function buildPresets() {
 const TABS = [
   { id: 'stats',    label: 'Statystyki' },
   { id: 'free',     label: 'Wolne zlecenia' },
-  { id: 'couriers', label: 'Kurienci' },
+  { id: 'couriers', label: 'Kurierzy' },
   { id: 'clients',  label: 'Klienci' },
   { id: 'manage',   label: 'Zarządzanie' },
 ];
@@ -376,7 +376,7 @@ function AdminDashboard({ user }) {
           </GlassCard>
 
           <h3 style={{ color: '#ff4d4d', marginBottom: '1rem' }}>
-            Opłacone paczki bez kuriera ({filteredFree.length}
+            Paczki w wolnej puli ({filteredFree.length}
             {filteredFree.length !== freePackages.length && ` z ${freePackages.length}`})
           </h3>
 
@@ -392,12 +392,15 @@ function AdminDashboard({ user }) {
             <div className="grid">
               {filteredFree.map(p => (
                 <GlassCard key={p.id} title={`Paczka #${p.id}`} style={{ display: 'flex', flexDirection: 'column' }}>
-                  <p><strong>Nadawca:</strong> {p.sender_name}</p>
-                  <p><strong>Odbiorca:</strong> {p.receiver_name}</p>
-                  <p><strong>Skąd:</strong> {p.origin_address}</p>
-                  <p><strong>Dokąd:</strong> {p.destination_address}</p>
-                  <p><strong>Dystans:</strong> {p.distance_km} km</p>
-                  <p><strong>Waga:</strong> {p.weight_kg} kg</p>
+                  <p style={{ color: 'var(--text-main)' }}><strong>Nadawca:</strong> {p.sender_name}</p>
+                  <p style={{ color: 'var(--text-main)' }}><strong>Odbiorca:</strong> {p.receiver_name}</p>
+                  <p style={{ color: 'var(--text-main)' }}><strong>Skąd:</strong> {p.origin_address}</p>
+                  <p style={{ color: 'var(--text-main)' }}><strong>Dokąd:</strong> {p.destination_address}</p>
+                  <p style={{ color: 'var(--text-main)' }}><strong>Dystans:</strong> {p.distance_km} km</p>
+                  <p style={{ color: 'var(--text-main)' }}><strong>Waga:</strong> {p.weight_kg} kg</p>
+                  <p style={{ color: p.is_paid ? '#10b981' : '#f59e0b', fontWeight: 600 }}>
+                    {p.is_paid ? '✓ Opłacona' : '⏳ Nieopłacona'}
+                  </p>
                   <p style={{ marginTop: 'auto', paddingTop: '0.8rem', color: '#ff4d4d', fontWeight: 700 }}>
                     Koszt: {p.delivery_cost} PLN
                   </p>

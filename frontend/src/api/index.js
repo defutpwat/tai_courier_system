@@ -10,10 +10,15 @@ const authHeaders = () => ({
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (res.status === 401) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.reload();
-    return;
+    if (localStorage.getItem('token')) {
+      // Token wygasł lub jest nieprawidłowy — wyloguj automatycznie
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.reload();
+      return;
+    }
+    // Brak tokenu = błąd logowania (złe hasło) — rzuć normalny błąd
+    throw new Error(data.detail || 'Nieprawidłowa nazwa użytkownika lub hasło');
   }
   if (!res.ok) {
     throw new Error(data.detail || 'Wystąpił błąd połączenia z serwerem');

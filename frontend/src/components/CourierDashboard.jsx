@@ -165,7 +165,8 @@ function CourierDashboard({ user }) {
               <h3 className="text-success">Paczka #{p.id}</h3>
               <p><strong>Od:</strong> {p.sender_name}</p>
               <p><strong>Do:</strong> {p.receiver_name}</p>
-              <p><strong>Trasa:</strong> {p.origin_address?.split(',')[0]} ➔ {p.destination_address?.split(',')[0]}</p>
+              <p><strong>Skąd:</strong> {p.origin_address}</p>
+              <p><strong>Dokąd:</strong> {p.destination_address}</p>
               <p><strong>Opłacona:</strong> {p.is_paid ? 'Tak' : 'Nie'}</p>
               <div style={{marginTop: 'auto', paddingTop: '1rem', display: 'flex', justifyContent: 'center'}}>
                 {p.is_paid ? (
