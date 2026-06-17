@@ -1,16 +1,42 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from pydantic import BaseModel
 import models
 import schemas
 from database import get_db
 from services import package_service, qr_service, paypal_service
+from services.auth_service import get_current_user, decode_token
 
 router = APIRouter(prefix="/packages", tags=["Packages"])
 
-@router.post("/", response_model=schemas.Package)
+_auth = [Depends(get_current_user)]
+
+class PayPalOrderCapture(BaseModel):
+    order_id: str
+
+class EstimateRequest(BaseModel):
+    origin_address: str
+    destination_address: str
+    weight_kg: float
+
+
+@router.post("/estimate", response_model=schemas.PackageEstimate, dependencies=_auth)
+async def estimate_package(data: EstimateRequest):
+    try:
+        return await package_service.estimate_cost(
+            data.origin_address, data.destination_address, data.weight_kg
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+
+@router.post("/", response_model=schemas.Package, dependencies=_auth)
 async def create_package(package: schemas.PackageCreate, db: Session = Depends(get_db)):
-    calc_data = await package_service.calculate_package_cost_and_distance(package)
+    try:
+        calc_data = await package_service.calculate_package_cost_and_distance(package)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
     db_package = models.Package(
         **package.model_dump(),
@@ -20,23 +46,24 @@ async def create_package(package: schemas.PackageCreate, db: Session = Depends(g
         is_paid=False,
         courier_id=None,
         client_archived=False,
-        courier_archived=False
+        courier_archived=False,
     )
     db.add(db_package)
     db.commit()
     db.refresh(db_package)
     return db_package
 
-@router.get("/", response_model=List[schemas.Package])
+
+@router.get("/", response_model=List[schemas.Package], dependencies=_auth)
 def read_packages(
     client_id: Optional[int] = None,
     courier_id: Optional[int] = None,
     client_archived: Optional[bool] = None,
     courier_archived: Optional[bool] = None,
     unassigned: Optional[bool] = False,
-    skip: int = 0, 
-    limit: int = 100, 
-    db: Session = Depends(get_db)
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
 ):
     query = db.query(models.Package)
     if client_id is not None:
@@ -49,17 +76,36 @@ def read_packages(
             query = query.filter(models.Package.courier_archived == courier_archived)
     if unassigned:
         query = query.filter(models.Package.courier_id == None, models.Package.status == "pending")
-
     return query.offset(skip).limit(limit).all()
 
-@router.get("/{package_id}", response_model=schemas.Package)
+
+@router.get("/{package_id}/qr")
+def generate_qr(package_id: int, token: Optional[str] = None, db: Session = Depends(get_db)):
+    if not token:
+        raise HTTPException(status_code=401, detail="Token wymagany")
+    decode_token(token)
+    package = db.query(models.Package).filter(models.Package.id == package_id).first()
+    if not package:
+        raise HTTPException(status_code=404, detail="Package not found")
+    content = qr_service.generate_tracking_qr(
+        package_id=package.id,
+        receiver_name=package.receiver_name,
+        origin=package.origin_address,
+        dest=package.destination_address,
+        status=package.status,
+    )
+    return Response(content=content, media_type="image/png")
+
+
+@router.get("/{package_id}", response_model=schemas.Package, dependencies=_auth)
 def read_package(package_id: int, db: Session = Depends(get_db)):
     package = db.query(models.Package).filter(models.Package.id == package_id).first()
     if package is None:
         raise HTTPException(status_code=404, detail="Package not found")
     return package
 
-@router.patch("/{package_id}/assign", response_model=schemas.Package)
+
+@router.patch("/{package_id}/assign", response_model=schemas.Package, dependencies=_auth)
 def assign_package(package_id: int, courier_id: int, db: Session = Depends(get_db)):
     package = db.query(models.Package).filter(models.Package.id == package_id).first()
     if not package:
@@ -68,56 +114,49 @@ def assign_package(package_id: int, courier_id: int, db: Session = Depends(get_d
         raise HTTPException(status_code=400, detail="Package already assigned")
     if not package.is_paid:
         raise HTTPException(status_code=400, detail="Package must be paid before assignment")
-    
     package.courier_id = courier_id
     package.status = "accepted"
     db.commit()
     db.refresh(package)
     return package
 
-@router.patch("/{package_id}/archive", response_model=schemas.Package)
+
+@router.patch("/{package_id}/archive", response_model=schemas.Package, dependencies=_auth)
 def archive_package(package_id: int, role: str, db: Session = Depends(get_db)):
     package = db.query(models.Package).filter(models.Package.id == package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="Package not found")
     if package.status != "delivered":
         raise HTTPException(status_code=400, detail="Package must be delivered to be archived")
-    
     if role == "client":
         package.client_archived = True
     elif role == "courier":
         package.courier_archived = True
     else:
         raise HTTPException(status_code=400, detail="Invalid role")
-
     db.commit()
     db.refresh(package)
     return package
 
-@router.patch("/{package_id}/status", response_model=schemas.Package)
+
+@router.patch("/{package_id}/status", response_model=schemas.Package, dependencies=_auth)
 def update_status(package_id: int, status: str, db: Session = Depends(get_db)):
     package = db.query(models.Package).filter(models.Package.id == package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="Package not found")
-    
     package.status = status
     db.commit()
     db.refresh(package)
     return package
 
-from pydantic import BaseModel
 
-class PayPalOrderCapture(BaseModel):
-    order_id: str
-
-@router.post("/{package_id}/paypal/create-order")
+@router.post("/{package_id}/paypal/create-order", dependencies=_auth)
 async def create_paypal_order(package_id: int, db: Session = Depends(get_db)):
     package = db.query(models.Package).filter(models.Package.id == package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="Package not found")
     if package.is_paid:
         raise HTTPException(status_code=400, detail="Package is already paid")
-        
     try:
         order_id = await paypal_service.create_order(package.delivery_cost)
         return {"orderID": order_id}
@@ -126,12 +165,12 @@ async def create_paypal_order(package_id: int, db: Session = Depends(get_db)):
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Error: {repr(e)}")
 
-@router.post("/{package_id}/paypal/capture-order", response_model=schemas.Package)
+
+@router.post("/{package_id}/paypal/capture-order", response_model=schemas.Package, dependencies=_auth)
 async def capture_paypal_order(package_id: int, data: PayPalOrderCapture, db: Session = Depends(get_db)):
     package = db.query(models.Package).filter(models.Package.id == package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="Package not found")
-        
     try:
         capture_response = await paypal_service.capture_order(data.order_id)
         if capture_response["status"] == "COMPLETED":
@@ -143,21 +182,3 @@ async def capture_paypal_order(package_id: int, data: PayPalOrderCapture, db: Se
             raise HTTPException(status_code=400, detail="Payment not completed")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
-
-@router.get("/{package_id}/qr")
-def generate_qr(package_id: int, db: Session = Depends(get_db)):
-    package = db.query(models.Package).filter(models.Package.id == package_id).first()
-    if not package:
-        raise HTTPException(status_code=404, detail="Package not found")
-        
-    content = qr_service.generate_tracking_qr(
-        package_id=package.id,
-        receiver_name=package.receiver_name,
-        origin=package.origin_address,
-        dest=package.destination_address,
-        status=package.status
-    )
-    
-    return Response(content=content, media_type="image/png")

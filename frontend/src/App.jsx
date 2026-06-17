@@ -3,11 +3,16 @@ import ClientDashboard from './components/ClientDashboard'
 import CourierDashboard from './components/CourierDashboard'
 import AdminDashboard from './components/AdminDashboard';
 import Login from './components/Login'
+import UserSettings from './components/UserSettings'
 import { Button } from './components/ui/Button'
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('user');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     if (darkMode) {
@@ -19,9 +24,23 @@ function App() {
     }
   }, [darkMode]);
 
-  const handleLogin = (userData) => { setUser(userData) };
+  const handleLogin = (data) => {
+    localStorage.setItem('token', data.access_token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setUser(data.user);
+  };
 
-  const handleLogout = () => { setUser(null) };
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
+
+  const handleProfileUpdate = (updatedUser) => {
+    const merged = { ...user, ...updatedUser };
+    localStorage.setItem('user', JSON.stringify(merged));
+    setUser(merged);
+  };
 
   const renderDashboard = () => {
     if (user.role === 'admin') return <AdminDashboard user={user} />;
@@ -46,17 +65,30 @@ function App() {
 
   return (
     <div>
+      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999 }}>
+        <Button variant="outline" onClick={() => setDarkMode(!darkMode)}>
+          {darkMode ? '☀️ Jasny' : '🌙 Ciemny'}
+        </Button>
+      </div>
       <div className="nav flex-between flex-wrap gap-4 mb-8">
          <h2 className="text-primary" style={{margin: 0}}>Courier System</h2>
          <div className="flex items-center flex-wrap gap-4">
-            <Button variant="outline" onClick={() => setDarkMode(!darkMode)}>
-               {darkMode ? '☀️ Jasny' : '🌙 Ciemny'}
-            </Button>
             <span className="text-main">
-              Zalogowano jako: <strong>{user.username}</strong> ({roleName})
+              <strong>{user.full_name || user.username}</strong> ({roleName})
             </span>
+            {user.role !== 'admin' && (
+              <Button variant="outline" onClick={() => setShowSettings(true)}>Moje konto</Button>
+            )}
             <Button onClick={handleLogout}>Wyloguj</Button>
          </div>
+
+         {showSettings && (
+           <UserSettings
+             user={user}
+             onClose={() => setShowSettings(false)}
+             onProfileUpdate={handleProfileUpdate}
+           />
+         )}
       </div>
 
       <div className="main-content">

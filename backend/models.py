@@ -13,7 +13,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password_hash = Column(String)
-    role = Column(String) # client or courier
+    role = Column(String)  # client, courier, admin
+    full_name = Column(String, nullable=True)
+    address = Column(String, nullable=True)
 
 class Package(Base):
     __tablename__ = "packages"

@@ -31,12 +31,12 @@ const ModalBox = styled.div`
   }
 `;
 
-export function Modal({ isOpen, onClose, title, children }) {
+export function Modal({ isOpen, onClose, title, children, width }) {
   if (!isOpen) return null;
 
   return (
     <ModalOverlay onClick={onClose}>
-      <ModalBox onClick={e => e.stopPropagation()}>
+      <ModalBox onClick={e => e.stopPropagation()} style={width ? { width, maxWidth: '95vw' } : { maxWidth: '95vw' }}>
         {title && <h3>{title}</h3>}
         {children}
       </ModalBox>

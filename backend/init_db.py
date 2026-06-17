@@ -16,18 +16,20 @@ def seed_users():
     db = SessionLocal()
     try:
         users_to_add = [
-            ("admin", "admin", "admin"),
-            ("test1", "1111", "client"),
-            ("test2", "2222", "client"),
-            ("kurier1", "3333", "courier"),
+            ("admin",   "admin", "admin",   "Administrator Systemu",  None),
+            ("test1",   "1111",  "client",  "Jan Kowalski",           "Warszawa, ul. Marszałkowska 10, 00-590"),
+            ("test2",   "2222",  "client",  "Anna Nowak",             "Kraków, ul. Floriańska 5, 31-019"),
+            ("kurier1", "3333",  "courier", "Piotr Wiśniewski",       "Gdańsk, ul. Długa 22, 80-827"),
         ]
         added = 0
-        for uname, pwd, role in users_to_add:
+        for uname, pwd, role, full_name, address in users_to_add:
             if not db.query(models.User).filter(models.User.username == uname).first():
                 db_user = models.User(
                     username=uname,
                     password_hash=get_password_hash(pwd),
-                    role=role
+                    role=role,
+                    full_name=full_name,
+                    address=address,
                 )
                 db.add(db_user)
                 added += 1

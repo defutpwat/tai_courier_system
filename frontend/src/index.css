@@ -36,6 +36,10 @@ h1, h2, h3 {
   margin-top: 0;
 }
 
+p {
+  margin: 0.2rem 0;
+}
+
 body.admin-theme, body.dark-theme.admin-theme {
   --bg-color: #120303;
   --container-bg: rgba(40, 10, 10, 0.6);
@@ -80,6 +84,9 @@ body.admin-theme, body.dark-theme.admin-theme {
 }
 .nav-link:hover:not(.active) {
   background: rgba(255,255,255,0.9);
+}
+body.dark-theme .nav-link:hover:not(.active) {
+  background: rgba(255,255,255,0.08);
 }
 
 /* Dark Mode Variables & Rules */

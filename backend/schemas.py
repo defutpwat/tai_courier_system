@@ -11,6 +11,8 @@ class UserCreate(BaseModel):
     username: str
     password: str
     role: str
+    full_name: Optional[str] = None
+    address: Optional[str] = None
 
 class UserLogin(BaseModel):
     username: str
@@ -20,13 +22,54 @@ class UserResetPassword(BaseModel):
     username: str
     new_password: str
 
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    address: Optional[str] = None
+
+class AdminUserCreate(BaseModel):
+    username: str
+    password: str
+    role: str
+    full_name: Optional[str] = None
+    address: Optional[str] = None
+
+class AdminUserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    address: Optional[str] = None
+    role: Optional[str] = None
+
+class AdminUserPasswordChange(BaseModel):
+    new_password: str
+
+class AdminPackageUpdate(BaseModel):
+    status: Optional[str] = None
+    courier_id: Optional[int] = None
+    is_paid: Optional[bool] = None
+
 class UserResponse(BaseModel):
     id: int
     username: str
     role: str
+    full_name: Optional[str] = None
+    address: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+class PackageEstimate(BaseModel):
+    distance_km: float
+    delivery_cost: float
+    road_type: str
+    road_factor: float
+    weight_label: str
+    weight_factor: float
+    weather_desc: str
+    weather_factor: float
 
 class PackageBase(BaseModel):
     client_id: int

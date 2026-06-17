@@ -1,0 +1,75 @@
+# 📜 Courier Delivery System - Handover Document (Dla Kolejnego Agenta AI)
+
+**Kontekst:**
+Niniejszy dokument to pełne podsumowanie prac deweloperskich nad systemem kurierskim wykonanych do maja 2026 roku. Aplikacja to nowoczesny system do zarządzania przesyłkami kurierskimi, wspierający role (Klient, Kurier, Admin), system płatności oraz kody QR.
+
+---
+
+## 🏗️ 1. Stan Początkowy vs Stan Obecny
+
+* **Stan początkowy:** Aplikacja borykała się z ogromnym długiem technologicznym. Backend to był jeden wielki plik `main.py` (tzw. "Fat Controller"), z wymieszanymi zapytaniami SQL, routingiem i logiką biznesową. Frontend miał wymieszane style *inline* z logiką, a zapytania API (fetch) były powielane w każdym komponencie. Płatności były jedynie mockowane.
+* **Obecny stan:** Projekt posiada profesjonalną, skalowalną architekturę warstwową (Backend) oraz w pełni komponentowy, hermetyczny kod UI ze zcentralizowaną warstwą danych (Frontend). Został zintegrowany z PayPal Sandbox i umieszczony w czystym środowisku Git.
+
+---
+
+## ⚙️ 2. Co dokładnie zbudowaliśmy na Backendzie (FastAPI + SQLite)?
+
+Zrealizowano pełen refaktor do czystej architektury:
+1. **Podział na warstwy:** 
+   - `routers/`: Endpointy API (np. `auth.py`, `packages.py`, `admin.py`). Obsługują jedynie odbieranie danych (Pydantic) i zwracanie odpowiedzi.
+   - `services/`: Czysta logika biznesowa i algorytmy.
+   - `models.py` (SQLAlchemy) oraz `schemas.py` (Pydantic) zostały ściśle rozdzielone.
+   - `config.py` i `database.py` izolują środowisko.
+2. **Autoryzacja (`auth_service.py`):** 
+   - Hasła są kryptograficznie zabezpieczone przez `bcrypt`.
+   - Logowanie wykorzystuje asymetryczne tokeny **JWT**. Endpointy wykorzystują mechanizm dependency injection (`Depends`) do sprawdzania roli (np. tylko admin może widzieć wszystkich użytkowników).
+3. **Logika Wyliczania Cen (`geocoding_service.py`):**
+   - Asynchroniczny serwis łączący się przez `httpx` do zewnętrznego API geolokacyjnego (Nominatim).
+   - Oblicza dystans w linii prostej między adresami (nadanie -> dostawa) i na tej podstawie wylicza ostateczny koszt paczki.
+4. **Integracja PayPal (`paypal_service.py`):**
+   - Pozbyto się endpointów typu mock.
+   - Napisano pełny serwis do autoryzacji `OAuth2` z serwerami PayPal.
+   - Stworzono funkcje `create_order` i `capture_order`, wymuszając odpowiednie formatowanie kwot (2 miejsca po przecinku, waluta PLN). Backend sam sprawdza z PayPalem, czy paczka została opłacona i zmienia w bazie flagę `is_paid = True`.
+
+---
+
+## 💻 3. Co dokładnie zbudowaliśmy na Frontendzie (React + Vite)?
+
+1. **Hermetyzacja UI (Komponenty):**
+   - Wydzielono odizolowane atomy: `<Button>`, `<Input>`, `<GlassCard>`, `<Modal>`.
+   - Ujednolicono system styli (`index.css`), wprowadzając zmienne globalne (wsparcie dla natywnego Dark/Light Mode). Usunięto setki linii inlinowego CSSa.
+   - Naprawiono bugi z kontrastem kolorów (w trybie ciemnym teksty na przyciskach były niewidoczne).
+2. **Centralna warstwa API (`src/api/index.js`):**
+   - Komponenty Reacta (np. Panele) nie odpytują już bezpośrednio serwera przy pomocy fetch/axios. Zamiast tego wywołują metody z serwisu API (np. `api.createPackage()`).
+   - Pozwala to na łatwą zmianę proxy lub dodawanie globalnych interceptorów (np. dla tokenów JWT) bez dotykania widoków.
+3. **Bramka Płatności (PayPal Checkout):**
+   - Wdrożono paczkę `@paypal/react-paypal-js`.
+   - **Kluczowy Bugfix:** Początkowo skrypt ładujący okno PayPala (`PayPalScriptProvider`) znajdował się w pętli `.map()` renderującej paczki. Skutkowało to konfliktami stanów przeglądarki (kliknięcie opłacenia paczki A ładowało zamówienie z paczki B). Provider został wyciągnięty na najwyższy poziom komponentu (`ClientDashboard.jsx`), pozostawiając w pętli tylko same żółte przyciski `<PayPalButtons>`.
+
+---
+
+## 🔒 4. Bezpieczeństwo i Środowisko Git (Obecny Status)
+
+* Projekt został pomyślnie przetransferowany do wyczyszczonego repozytorium GitHub: `tai_courier_system`.
+* **Pliki ignorowane:** `.gitignore` poprawnie odsiewa środowiska `__pycache__`, `node_modules`, skrypty testowe oraz bazę `courier.db` (baza inicjalizuje się od zera skryptem `init_db.py`).
+* **Sekrety:** Oczyszczono repozytorium z wycieku poświadczeń. Twardo zakodowany `PAYPAL_CLIENT_SECRET` w pliku `config.py` został zamieniony na pobieranie z `os.environ`. Utworzono instrukcję (README) wymagającą lokalnego stworzenia środowiska `.env`. (Uwaga: Plik `frontend/.env` z jawnym kluczem Client ID został na GitHubie by ułatwić testowanie).
+
+---
+
+## 🚀 5. Następne kroki (Co może zrobić nowy Agent?)
+
+Jeśli podejmujesz pracę nad projektem, system jest w 100% sprawny i gotowy na nowe funkcje.
+
+Hej, przeczytaj ten prompt i daj znać czy rozumiesz wszystko i czy masz pytania. Jeśli rzeczywiście potrzebujesz jakichś odpowiedzi, nie zawahaj się zapytać
+
+PONADTO:
+
+Wykładowca nalega na następujące funkcjonalności:
+- useQuery() do retry (ponawiania wyświetlania) np. pobierania listy paczek na wypadek, gdyby strona nie odpowiadała przez jakiś moment (kręcące się kółeczko)
+
+- styled-components aby ulepszyć hermetyzację styli
+
+- google maps api aby lepiej wyliczało długość trasy od A do B. Potem skupimy się na obliczeniach kosztów dostawy
+
+
+

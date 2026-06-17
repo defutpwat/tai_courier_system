@@ -5,7 +5,7 @@ Służy jako punkt wejścia konfigurujący aplikację i routery.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import auth, packages, admin
+from routers import auth, packages, admin, maps
 
 app = FastAPI(title="Courier Delivery System")
 
@@ -22,6 +22,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(packages.router)
 app.include_router(admin.router)
+app.include_router(maps.router)
 
 @app.get("/")
 def read_root():
